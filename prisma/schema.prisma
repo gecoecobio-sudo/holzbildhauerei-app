@@ -1,0 +1,59 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Source {
+  id              Int       @id @default(autoincrement())
+  url             String    @unique
+  title           String
+  category        String
+  summary_de      String
+  tags            String    // JSON array as string
+  language        String    @default("Deutsch")
+  date_added      DateTime  @default(now())
+  source_query    String?
+  relevance_score Int       @default(5)
+  corrected_score Int?      // Manuelle Korrektur
+  star_rating     Boolean   @default(false) // Stern-Markierung
+  last_updated    DateTime  @default(now()) @updatedAt
+
+  @@map("sources")
+  @@index([url])
+  @@index([language])
+  @@index([star_rating])
+}
+
+model SearchQueue {
+  id              Int       @id @default(autoincrement())
+  query           String
+  status          String    @default("pending") // pending, processing, completed, failed
+  date_added      DateTime  @default(now())
+  date_processed  DateTime?
+  error_message   String?
+  results_count   Int       @default(0)
+  is_ai_generated Boolean   @default(false)
+
+  @@map("search_queue")
+  @@index([status])
+}
+
+model TagCooccurrence {
+  id           Int      @id @default(autoincrement())
+  tag1         String
+  tag2         String
+  count        Int      @default(1)
+  last_updated DateTime @default(now()) @updatedAt
+
+  @@unique([tag1, tag2])
+  @@map("tag_cooccurrence")
+  @@index([tag1])
+  @@index([tag2])
+}

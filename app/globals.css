@@ -1,0 +1,102 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Notion-inspired Color Palette */
+    --background: 255 255 255;
+    --foreground: 26 26 26;
+    --text-secondary: 107 107 107;
+    --text-tertiary: 163 163 163;
+
+    /* Accent Colors */
+    --accent-teal: 14 165 233;
+    --accent-red: 239 68 68;
+    --accent-yellow: 245 158 11;
+    --accent-blue: 59 130 246;
+
+    /* UI Elements */
+    --border: 229 229 229;
+    --hover: 245 245 245;
+    --selected: 239 246 255;
+
+    /* Shadows */
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+  }
+}
+
+@layer base {
+  * {
+    @apply border-[rgb(var(--border))];
+  }
+
+  body {
+    @apply bg-[rgb(var(--background))] text-[rgb(var(--foreground))];
+    @apply font-sans antialiased;
+    font-feature-settings: 'cv11', 'ss01';
+  }
+
+  h1 {
+    @apply text-[2rem] font-semibold leading-tight;
+  }
+
+  h2 {
+    @apply text-[1.5rem] font-semibold leading-snug;
+  }
+
+  h3 {
+    @apply text-[1.25rem] font-semibold leading-normal;
+  }
+
+  p {
+    @apply text-[0.875rem] leading-relaxed;
+  }
+}
+
+@layer utilities {
+  .text-secondary {
+    @apply text-[rgb(var(--text-secondary))];
+  }
+
+  .text-tertiary {
+    @apply text-[rgb(var(--text-tertiary))];
+  }
+
+  .bg-hover {
+    @apply bg-[rgb(var(--hover))];
+  }
+
+  .bg-selected {
+    @apply bg-[rgb(var(--selected))];
+  }
+
+  .notion-card {
+    @apply bg-white border border-[rgb(var(--border))] rounded-lg p-6;
+    @apply hover:shadow-md transition-shadow duration-200;
+  }
+
+  .notion-button {
+    @apply px-4 py-2 rounded-md font-medium text-sm;
+    @apply transition-colors duration-150;
+  }
+
+  .notion-button-primary {
+    @apply notion-button bg-[rgb(var(--accent-teal))] text-white;
+    @apply hover:bg-[rgb(var(--accent-teal))]/90;
+  }
+
+  .notion-button-secondary {
+    @apply notion-button bg-[rgb(var(--hover))] text-[rgb(var(--foreground))];
+    @apply hover:bg-[rgb(var(--border))];
+  }
+
+  .notion-input {
+    @apply w-full px-3 py-2 text-sm rounded-md border border-[rgb(var(--border))];
+    @apply focus:outline-none focus:ring-2 focus:ring-[rgb(var(--accent-teal))]/20;
+    @apply focus:border-[rgb(var(--accent-teal))];
+  }
+}
