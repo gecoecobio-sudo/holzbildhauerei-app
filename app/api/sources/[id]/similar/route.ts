@@ -1,12 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { findSimilarSources } from '@/lib/cooccurrence'
 
+type Params = {
+  params: Promise<{ id: string }>
+}
+
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: Params
 ) {
   try {
-    const id = parseInt(params.id)
+    const { id: idParam } = await params
+    const id = parseInt(idParam)
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 })
     }

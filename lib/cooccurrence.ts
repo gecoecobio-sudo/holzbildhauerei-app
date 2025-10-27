@@ -80,17 +80,22 @@ export async function getRelatedTags(tag: string, limit: number = 10): Promise<A
 export async function findSimilarSources(sourceId: number, limit: number = 5) {
   try {
     // Get the source and its tags
-    const source = await prisma.source.findUnique({
+    const rawSource = await prisma.source.findUnique({
       where: { id: sourceId },
       select: { tags: true }
     })
 
-    if (!source || source.tags.length === 0) {
+    if (!rawSource) {
+      return []
+    }
+
+    const sourceTags = JSON.parse(rawSource.tags) as string[]
+    if (sourceTags.length === 0) {
       return []
     }
 
     // Get all sources except the current one
-    const allSources = await prisma.source.findMany({
+    const rawSources = await prisma.source.findMany({
       where: {
         id: { not: sourceId }
       },
@@ -108,12 +113,18 @@ export async function findSimilarSources(sourceId: number, limit: number = 5) {
       }
     })
 
+    // Parse tags for all sources
+    const allSources = rawSources.map(s => ({
+      ...s,
+      tags: JSON.parse(s.tags) as string[]
+    }))
+
     // Calculate similarity scores
     const scoredSources = allSources.map(otherSource => {
       let score = 0
 
       // Count tag overlaps
-      const sharedTags = source.tags.filter(tag => otherSource.tags.includes(tag))
+      const sharedTags = sourceTags.filter(tag => otherSource.tags.includes(tag))
       score += sharedTags.length * 10 // Base score for shared tags
 
       // Add co-occurrence bonus for shared tags

@@ -27,7 +27,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get all sources first
-    let sources = await prisma.source.findMany({
+    const rawSources = await prisma.source.findMany({
       where,
       orderBy: {
         date_added: 'desc'
@@ -35,9 +35,9 @@ export async function GET(request: NextRequest) {
     })
 
     // Parse tags from JSON strings
-    sources = sources.map(source => ({
+    let sources = rawSources.map(source => ({
       ...source,
-      tags: JSON.parse(source.tags)
+      tags: JSON.parse(source.tags) as string[]
     }))
 
     // Apply search filter (client-side since SQLite doesn't have great JSON support)

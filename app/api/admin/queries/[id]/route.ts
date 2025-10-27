@@ -2,9 +2,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { checkAuth } from '@/lib/auth'
 import { prisma } from '@/lib/db'
 
+type Params = {
+  params: Promise<{ id: string }>
+}
+
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: Params
 ) {
   const isAuth = await checkAuth()
   if (!isAuth) {
@@ -12,7 +16,8 @@ export async function PATCH(
   }
 
   try {
-    const id = parseInt(params.id)
+    const { id: idParam } = await params
+    const id = parseInt(idParam)
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 })
     }
@@ -52,7 +57,7 @@ export async function PATCH(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: Params
 ) {
   const isAuth = await checkAuth()
   if (!isAuth) {
@@ -60,7 +65,8 @@ export async function DELETE(
   }
 
   try {
-    const id = parseInt(params.id)
+    const { id: idParam } = await params
+    const id = parseInt(idParam)
     if (isNaN(id)) {
       return NextResponse.json({ error: 'Invalid ID' }, { status: 400 })
     }
