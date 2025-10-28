@@ -40,12 +40,15 @@ export async function POST(request: NextRequest) {
     })
 
     try {
+      // IMPORTANT: Vercel Serverless Functions have 60s timeout (Hobby plan)
+      // With 3 URLs × (8s fetch + 3s Gemini + 1s DB) = ~36s total
+      // This ensures we finish well under the 60s limit
       console.log(`[Query ${queryId}] Starting processing for: "${query.query}"`)
       const startTime = Date.now()
 
-      // Search with Serper - Use 8 URLs (balanced quality/speed)
+      // Search with Serper - Use 3 URLs (MUST finish under 60s serverless timeout!)
       console.log(`[Query ${queryId}] Searching with Serper...`)
-      const urls = await searchWithSerper(query.query, 8)
+      const urls = await searchWithSerper(query.query, 3)
       console.log(`[Query ${queryId}] Found ${urls.length} URLs:`, urls)
 
       let successCount = 0
@@ -84,7 +87,7 @@ export async function POST(request: NextRequest) {
           const fetchStartTime = Date.now()
           try {
             const controller = new AbortController()
-            const timeout = setTimeout(() => controller.abort(), 15000) // 15s timeout (balanced)
+            const timeout = setTimeout(() => controller.abort(), 8000) // 8s timeout (fast, must stay under 60s total)
 
             const pageResponse = await fetch(url, {
               headers: {
