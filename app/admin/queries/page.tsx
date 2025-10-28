@@ -24,11 +24,12 @@ export default function QueriesManagementPage() {
   const [querySources, setQuerySources] = useState<Record<number, Source[]>>({})
   const [loadingSources, setLoadingSources] = useState<Set<number>>(new Set())
 
-  // Manual source adding state
+  // Manual source adding state - support multiple concurrent sources
   const [manualUrl, setManualUrl] = useState("")
-  const [addingManualSource, setAddingManualSource] = useState(false)
   const [manualSourcePreview, setManualSourcePreview] = useState<any>(null)
   const [loadingPreview, setLoadingPreview] = useState(false)
+  const [savingSourceIds, setSavingSourceIds] = useState<Set<string>>(new Set())
+  const [savedSources, setSavedSources] = useState<string[]>([])
 
   const router = useRouter()
 
@@ -281,36 +282,49 @@ export default function QueriesManagementPage() {
   async function saveManualSource() {
     if (!manualSourcePreview) return
 
-    setAddingManualSource(true)
+    const sourceUrl = manualUrl.trim()
+    const sourceId = `source-${Date.now()}`
+
+    // Add to saving list
+    setSavingSourceIds(prev => new Set(prev).add(sourceId))
+
+    // Clear form immediately so user can add next source
+    const previewData = { ...manualSourcePreview }
+    setManualUrl("")
+    setManualSourcePreview(null)
+
+    // Save in background
     try {
       const res = await fetch('/api/admin/sources', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          url: manualUrl.trim(),
-          title: manualSourcePreview.title,
-          summary_de: manualSourcePreview.summary_de,
-          category: manualSourcePreview.category,
-          language: manualSourcePreview.language,
-          tags: manualSourcePreview.tags,
-          relevance_score: manualSourcePreview.relevance_score,
-          star_rating: manualSourcePreview.star_rating,
+          url: sourceUrl,
+          title: previewData.title,
+          summary_de: previewData.summary_de,
+          category: previewData.category,
+          language: previewData.language,
+          tags: previewData.tags,
+          relevance_score: previewData.relevance_score,
+          star_rating: previewData.star_rating,
           source_query: null
         })
       })
 
       if (res.ok) {
-        setManualUrl("")
-        setManualSourcePreview(null)
-        alert('Quelle erfolgreich hinzugefügt!')
+        setSavedSources(prev => [...prev, sourceUrl])
       } else {
         const error = await res.json()
-        throw new Error(error.error || 'Failed to add source')
+        alert(`Fehler beim Speichern von ${sourceUrl}: ${error.error || 'Unknown error'}`)
       }
     } catch (error: any) {
-      alert(error.message || 'Fehler beim Hinzufügen der Quelle')
+      alert(`Fehler beim Speichern von ${sourceUrl}: ${error.message || 'Unknown error'}`)
     } finally {
-      setAddingManualSource(false)
+      setSavingSourceIds(prev => {
+        const next = new Set(prev)
+        next.delete(sourceId)
+        return next
+      })
     }
   }
 
@@ -459,11 +473,11 @@ export default function QueriesManagementPage() {
                   }}
                   className="notion-input flex-1"
                   placeholder="https://..."
-                  disabled={loadingPreview || addingManualSource}
+                  disabled={loadingPreview}
                 />
                 <button
                   onClick={generateManualSourcePreview}
-                  disabled={loadingPreview || !manualUrl.trim() || addingManualSource}
+                  disabled={loadingPreview || !manualUrl.trim()}
                   className="notion-button-primary flex items-center gap-2"
                 >
                   {loadingPreview ? (
@@ -591,32 +605,47 @@ export default function QueriesManagementPage() {
                   <div className="flex gap-2 pt-2">
                     <button
                       onClick={saveManualSource}
-                      disabled={addingManualSource}
                       className="notion-button-primary flex items-center gap-2 flex-1"
                     >
-                      {addingManualSource ? (
-                        <>
-                          <Loader className="w-4 h-4 animate-spin" />
-                          Speichert...
-                        </>
-                      ) : (
-                        <>
-                          <Plus className="w-4 h-4" />
-                          Quelle speichern
-                        </>
-                      )}
+                      <Plus className="w-4 h-4" />
+                      Quelle speichern & nächste hinzufügen
                     </button>
                     <button
                       onClick={() => {
                         setManualSourcePreview(null)
                         setManualUrl("")
                       }}
-                      disabled={addingManualSource}
                       className="notion-button-secondary"
                     >
                       Abbrechen
                     </button>
                   </div>
+                </div>
+
+                {/* Status of saving sources */}
+                {savingSourceIds.size > 0 && (
+                  <div className="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                    <div className="flex items-center gap-2 text-sm text-blue-700">
+                      <Loader className="w-4 h-4 animate-spin" />
+                      <span>{savingSourceIds.size} Quelle(n) werden gespeichert...</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Successfully saved sources */}
+                {savedSources.length > 0 && (
+                  <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-md">
+                    <div className="text-sm text-green-700 font-medium mb-1">
+                      ✓ {savedSources.length} Quelle(n) erfolgreich gespeichert
+                    </div>
+                    <button
+                      onClick={() => setSavedSources([])}
+                      className="text-xs text-green-600 hover:underline"
+                    >
+                      Liste leeren
+                    </button>
+                  </div>
+                )}
                 </div>
               </div>
             )}

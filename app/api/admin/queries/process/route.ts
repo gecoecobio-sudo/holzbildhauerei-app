@@ -40,8 +40,9 @@ export async function POST(request: NextRequest) {
     })
 
     try {
-      // Search with Serper - Use 15 URLs for maximum quality coverage
-      const urls = await searchWithSerper(query.query, 15)
+      // Search with Serper - Use 8 URLs (balanced quality/speed)
+      // 15 URLs with Gemini 2.5 Pro exceeds Vercel's 60s serverless timeout
+      const urls = await searchWithSerper(query.query, 8)
 
       let successCount = 0
       const errors = []
@@ -68,11 +69,11 @@ export async function POST(request: NextRequest) {
             continue
           }
 
-          // Fetch page content with longer timeout for quality
+          // Fetch page content with timeout
           let content = ''
           try {
             const controller = new AbortController()
-            const timeout = setTimeout(() => controller.abort(), 30000) // 30s timeout for quality
+            const timeout = setTimeout(() => controller.abort(), 15000) // 15s timeout (balanced)
 
             const pageResponse = await fetch(url, {
               headers: {

@@ -4,7 +4,14 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 export async function generateSourceMetadata(url: string, content?: string) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' })
+    // Use faster Flash model for better response times
+    // Gemini 2.5 Pro is too slow for serverless (60s timeout)
+    const model = genAI.getGenerativeModel({
+      model: 'gemini-2.0-flash-exp',
+      generationConfig: {
+        temperature: 0.7,
+      }
+    })
 
     const prompt = `Analyze this URL and generate metadata for a woodworking and traditional crafts knowledge base article.
 
@@ -79,7 +86,7 @@ Return ONLY valid JSON, no markdown formatting.`
 
 export async function generateSearchQueries(topic: string, count: number = 5) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     const prompt = `Generate ${count} specific search queries for finding high-quality woodworking and traditional crafts EDUCATIONAL resources about: "${topic}"
 
@@ -119,7 +126,7 @@ Return ONLY valid JSON, no markdown formatting.`
 
 export async function correctTitle(originalTitle: string, url: string, summary?: string) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
 
     const prompt = `Analyze and correct/improve this article title:
 

@@ -265,9 +265,24 @@ export function ArticleCard({ source, isAdmin = false, onUpdate, allSources = []
           </div>
 
           {/* Zusammenfassung */}
-          <p className="text-[0.875rem] text-secondary mb-3">
-            {source.summary_de}
-          </p>
+          <div className="text-[0.875rem] text-secondary mb-3">
+            {(() => {
+              const lines = source.summary_de.split('\n').filter(l => l.trim())
+              if (lines.length > 1) {
+                return (
+                  <>
+                    <p className="font-semibold text-[rgb(var(--foreground))] mb-1">
+                      {lines[0]}
+                    </p>
+                    <p>
+                      {lines.slice(1).join('\n')}
+                    </p>
+                  </>
+                )
+              }
+              return <p>{source.summary_de}</p>
+            })()}
+          </div>
 
       {/* Tags - Collapsible */}
       {source.tags.length > 0 && (
