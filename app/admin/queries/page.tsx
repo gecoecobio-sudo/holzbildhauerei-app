@@ -646,7 +646,6 @@ export default function QueriesManagementPage() {
                     </button>
                   </div>
                 )}
-                </div>
               </div>
             )}
           </div>

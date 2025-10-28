@@ -274,13 +274,13 @@ export function ArticleCard({ source, isAdmin = false, onUpdate, allSources = []
                     <p className="font-semibold text-[rgb(var(--foreground))] mb-1">
                       {lines[0]}
                     </p>
-                    <p>
+                    <p className="whitespace-pre-line">
                       {lines.slice(1).join('\n')}
                     </p>
                   </>
                 )
               }
-              return <p>{source.summary_de}</p>
+              return <p className="whitespace-pre-line">{source.summary_de}</p>
             })()}
           </div>
 
