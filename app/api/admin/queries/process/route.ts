@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
     })
 
     try {
-      // Search with Serper
-      const urls = await searchWithSerper(query.query, 10)
+      // Search with Serper (reduced to 5 URLs for faster processing)
+      const urls = await searchWithSerper(query.query, 5)
 
       let successCount = 0
       const errors = []
@@ -49,6 +49,16 @@ export async function POST(request: NextRequest) {
       // Process each URL
       for (const url of urls) {
         try {
+          // Check if query was cancelled
+          const currentQuery = await prisma.searchQueue.findUnique({
+            where: { id: queryId }
+          })
+
+          if (currentQuery?.status === 'failed') {
+            console.log('Query processing cancelled by user')
+            break
+          }
+
           // Check if URL already exists
           const existing = await prisma.source.findFirst({
             where: { url }
@@ -58,19 +68,26 @@ export async function POST(request: NextRequest) {
             continue
           }
 
-          // Fetch page content
+          // Fetch page content with timeout
           let content = ''
           try {
+            const controller = new AbortController()
+            const timeout = setTimeout(() => controller.abort(), 10000) // 10s timeout
+
             const pageResponse = await fetch(url, {
               headers: {
                 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-              }
+              },
+              signal: controller.signal
             })
+
+            clearTimeout(timeout)
+
             if (pageResponse.ok) {
               content = await pageResponse.text()
             }
           } catch (error) {
-            console.log('Could not fetch page content for', url)
+            console.log('Could not fetch page content for', url, error instanceof Error ? error.message : '')
           }
 
           // Generate metadata

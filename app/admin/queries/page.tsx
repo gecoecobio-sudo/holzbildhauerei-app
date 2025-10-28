@@ -113,18 +113,16 @@ export default function QueriesManagementPage() {
     setProcessingIds(prev => new Set(prev).add(id))
 
     try {
-      // Start processing
-      const res = await fetch('/api/admin/queries/process', {
+      // Start processing (don't wait for response as it takes long)
+      fetch('/api/admin/queries/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ queryId: id })
+      }).catch(error => {
+        console.error('Processing request failed:', error)
       })
 
-      if (!res.ok) {
-        throw new Error('Failed to start processing')
-      }
-
-      // Poll for status updates every 2 seconds
+      // Poll for status updates every 3 seconds
       const pollInterval = setInterval(async () => {
         try {
           const statusRes = await fetch(`/api/admin/queries?search=&status=`)
@@ -146,9 +144,9 @@ export default function QueriesManagementPage() {
         } catch (error) {
           console.error('Failed to poll status:', error)
         }
-      }, 2000)
+      }, 3000)
 
-      // Timeout after 5 minutes
+      // Timeout after 10 minutes
       setTimeout(() => {
         clearInterval(pollInterval)
         setProcessingIds(prev => {
@@ -157,7 +155,7 @@ export default function QueriesManagementPage() {
           return next
         })
         loadQueries()
-      }, 300000)
+      }, 600000)
     } catch (error) {
       console.error('Failed to process query:', error)
       setProcessingIds(prev => {
@@ -165,6 +163,29 @@ export default function QueriesManagementPage() {
         next.delete(id)
         return next
       })
+    }
+  }
+
+  async function cancelQuery(id: number) {
+    if (!confirm('Möchtest du die Verarbeitung wirklich abbrechen?')) return
+
+    try {
+      const res = await fetch('/api/admin/queries/cancel', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ queryId: id })
+      })
+
+      if (res.ok) {
+        setProcessingIds(prev => {
+          const next = new Set(prev)
+          next.delete(id)
+          return next
+        })
+        loadQueries()
+      }
+    } catch (error) {
+      console.error('Failed to cancel query:', error)
     }
   }
 
@@ -719,11 +740,19 @@ export default function QueriesManagementPage() {
 
                         {/* Processing Status */}
                         {query.status === 'processing' && (
-                          <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
-                            <Loader className="w-4 h-4 animate-spin text-blue-600" />
-                            <span className="text-sm text-blue-700 font-medium">
-                              Verarbeitung läuft...
-                            </span>
+                          <div className="flex items-center gap-2">
+                            <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                              <Loader className="w-4 h-4 animate-spin text-blue-600" />
+                              <span className="text-sm text-blue-700 font-medium">
+                                Verarbeitung läuft...
+                              </span>
+                            </div>
+                            <button
+                              onClick={() => cancelQuery(query.id)}
+                              className="px-3 py-2 text-sm bg-red-50 text-red-700 rounded-lg border border-red-200 hover:bg-red-100 transition-colors"
+                            >
+                              Abbrechen
+                            </button>
                           </div>
                         )}
 

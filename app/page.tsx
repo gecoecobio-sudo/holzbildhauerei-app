@@ -156,27 +156,31 @@ export default function HomePage() {
       </header>
 
       {/* Hero Section with Background */}
-      <section className="relative border-b border-[rgb(var(--border))] overflow-hidden">
-        {/* Background Image with Dark Overlay */}
-        <div
-          className="absolute inset-0 bg-cover bg-center bg-gradient-to-br from-amber-100 via-orange-50 to-amber-200"
-          style={{
-            backgroundImage: 'url(/hero-background.jpg)',
-            backgroundBlendMode: 'multiply'
-          }}
-        >
-          <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70"></div>
-        </div>
+      <section className="py-8 bg-[rgb(var(--hover))]">
+        <div className="max-w-7xl mx-auto px-6">
+          <div className="relative overflow-hidden rounded-xl border border-[rgb(var(--border))]">
+            {/* Background Image with Dark Overlay */}
+            <div
+              className="absolute inset-0 bg-cover bg-center bg-gradient-to-br from-amber-100 via-orange-50 to-amber-200"
+              style={{
+                backgroundImage: 'url(/hero-background.jpg)',
+                backgroundBlendMode: 'multiply'
+              }}
+            >
+              <div className="absolute inset-0 bg-gradient-to-b from-black/70 via-black/60 to-black/70"></div>
+            </div>
 
-        {/* Content */}
-        <div className="relative z-10 max-w-5xl mx-auto px-6 py-12 text-center">
-          <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white drop-shadow-lg">
-            Entdecke hochwertige Ressourcen für Holzbildhauerei
-          </h2>
-          <p className="text-base md:text-lg text-white/95 max-w-2xl mx-auto drop-shadow-md font-medium">
-            Eine kuratierte Sammlung von Fachartikeln, Tutorials, Werkzeugempfehlungen
-            und Expertenwissen rund um Holzbildhauerei und traditionelles Holzhandwerk.
-          </p>
+            {/* Content */}
+            <div className="relative z-10 px-8 py-20 text-center">
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-white drop-shadow-lg">
+                Entdecke hochwertige Ressourcen für Holzbildhauerei
+              </h2>
+              <p className="text-base md:text-lg text-white/95 max-w-2xl mx-auto drop-shadow-md font-medium">
+                Eine kuratierte Sammlung von Fachartikeln, Tutorials, Werkzeugempfehlungen
+                und Expertenwissen rund um Holzbildhauerei und traditionelles Holzhandwerk.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
