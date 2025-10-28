@@ -48,17 +48,35 @@ export async function POST(request: NextRequest) {
 
       // Search with Serper - Use 3 URLs (MUST finish under 60s serverless timeout!)
       console.log(`[Query ${queryId}] Searching with Serper...`)
-      const urls = await searchWithSerper(query.query, 3)
-      console.log(`[Query ${queryId}] Found ${urls.length} URLs:`, urls)
+      const rawUrls = await searchWithSerper(query.query, 3)
+      console.log(`[Query ${queryId}] Raw URLs from Serper:`, rawUrls)
+
+      // Remove duplicates from Serper results
+      const urls = Array.from(new Set(rawUrls))
+      if (rawUrls.length !== urls.length) {
+        console.log(`[Query ${queryId}] Removed ${rawUrls.length - urls.length} duplicate URLs from Serper results`)
+      }
+
+      // Batch check: Which URLs already exist in DB?
+      const existingUrls = await prisma.source.findMany({
+        where: { url: { in: urls } },
+        select: { url: true }
+      })
+      const existingUrlSet = new Set(existingUrls.map(s => s.url))
+
+      // Filter to only new URLs
+      const newUrls = urls.filter(url => !existingUrlSet.has(url))
+      console.log(`[Query ${queryId}] URLs: ${urls.length} total, ${existingUrlSet.size} already in DB, ${newUrls.length} new to process`)
 
       let successCount = 0
       const errors = []
+      const processedInThisRequest = new Set<string>() // Track URLs being processed in this request
 
       // Process each URL
-      for (let i = 0; i < urls.length; i++) {
-        const url = urls[i]
+      for (let i = 0; i < newUrls.length; i++) {
+        const url = newUrls[i]
         const urlStartTime = Date.now()
-        console.log(`[Query ${queryId}] Processing URL ${i + 1}/${urls.length}: ${url}`)
+        console.log(`[Query ${queryId}] Processing URL ${i + 1}/${newUrls.length}: ${url}`)
 
         try {
           // Check if query was cancelled
@@ -71,18 +89,17 @@ export async function POST(request: NextRequest) {
             break
           }
 
-          // Check if URL already exists
-          const existing = await prisma.source.findFirst({
-            where: { url }
-          })
-
-          if (existing) {
-            console.log(`[Query ${queryId}] URL ${i + 1}/${urls.length} already exists, skipping`)
+          // Double-check: already processed in this request?
+          if (processedInThisRequest.has(url)) {
+            console.log(`[Query ${queryId}] URL ${i + 1}/${newUrls.length} already processed in this request, skipping`)
             continue
           }
 
+          // Mark as being processed
+          processedInThisRequest.add(url)
+
           // Fetch page content with timeout
-          console.log(`[Query ${queryId}] Fetching content for URL ${i + 1}/${urls.length}...`)
+          console.log(`[Query ${queryId}] Fetching content for URL ${i + 1}/${newUrls.length}...`)
           let content = ''
           const fetchStartTime = Date.now()
           try {
@@ -141,15 +158,21 @@ export async function POST(request: NextRequest) {
 
           successCount++
           const urlTotalTime = Date.now() - urlStartTime
-          console.log(`[Query ${queryId}] URL ${i + 1}/${urls.length} completed in ${urlTotalTime}ms (Success #${successCount})`)
+          console.log(`[Query ${queryId}] URL ${i + 1}/${newUrls.length} completed in ${urlTotalTime}ms (Success #${successCount})`)
         } catch (error) {
-          console.error(`[Query ${queryId}] Failed to process URL ${i + 1}/${urls.length}:`, error)
+          console.error(`[Query ${queryId}] Failed to process URL ${i + 1}/${newUrls.length}:`, error)
           errors.push({ url, error: error instanceof Error ? error.message : 'Unknown error' })
         }
       }
 
       const totalTime = Date.now() - startTime
-      console.log(`[Query ${queryId}] Processing complete! ${successCount} sources added in ${totalTime}ms (${(totalTime/1000).toFixed(1)}s)`)
+      console.log(`[Query ${queryId}] Processing complete! ${successCount} new sources added in ${totalTime}ms (${(totalTime/1000).toFixed(1)}s)`)
+
+      // Count TOTAL sources for this query (not just newly added)
+      const totalSourcesForQuery = await prisma.source.count({
+        where: { source_query: query.query }
+      })
+      console.log(`[Query ${queryId}] Total sources for this query: ${totalSourcesForQuery}`)
 
       // Update query status
       await prisma.searchQueue.update({
@@ -157,15 +180,17 @@ export async function POST(request: NextRequest) {
         data: {
           status: 'processed',
           date_processed: new Date(),
-          results_count: successCount,
+          results_count: totalSourcesForQuery,  // Total count, not just new ones
           error_message: errors.length > 0 ? `${errors.length} errors occurred` : null
         }
       })
 
       return NextResponse.json({
         success: true,
-        results_count: successCount,
-        total_urls: urls.length,
+        new_sources_added: successCount,
+        total_sources_for_query: totalSourcesForQuery,
+        urls_checked: newUrls.length,
+        urls_already_existed: existingUrlSet.size,
         errors: errors.length
       })
     } catch (error: any) {
