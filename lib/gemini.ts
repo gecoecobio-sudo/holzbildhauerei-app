@@ -9,16 +9,36 @@ export async function generateSourceMetadata(url: string, content?: string) {
     const prompt = `Analyze this URL and generate metadata for a woodcarving knowledge base article.
 
 URL: ${url}
-${content && typeof content === 'string' && content.length > 0 ? `Content preview: ${content.substring(0, 1000)}` : ''}
+${content && typeof content === 'string' && content.length > 0 ? `Content preview: ${content.substring(0, 1500)}` : ''}
 
 IMPORTANT: This is a knowledge base for woodcarving professionals and enthusiasts. Evaluate the quality critically.
 
 Generate a JSON response with:
 1. title: Concise German title
-2. summary_de: German summary (2-3 sentences)
-3. category: ONE of: Tutorial, Werkzeug, Material, Technik, Inspiration, Community, Geschichte, Sonstiges
-4. tags: Array of 5-10 relevant German tags related to woodcarving
+2. summary_de: Structured summary with TWO parts (as single string):
+   - First line: Short headline (5-8 words) describing what type of content this is (e.g., "Tutorial: Schnitzeisen schleifen mit Wasserstein")
+   - After newline: More detailed description (3-5 sentences) explaining the content, techniques, tools, and key takeaways
+   Example: "Tutorial: Reliefschnitzen für Anfänger\nDieser Artikel erklärt die Grundlagen des Reliefschnitzens mit praktischen Schritt-für-Schritt-Anleitungen. Er behandelt die Auswahl der richtigen Werkzeuge, Holzarten und Schnitztechniken. Besonders hilfreich sind die detaillierten Fotos der einzelnen Arbeitsschritte."
+
+3. category: ONE of these SOURCE TYPES (Art der Quelle):
+   - Shopping (E-Commerce, Produktseiten, Online-Shops)
+   - Dokumentation (Anleitungen, Handbücher, technische Dokumentation)
+   - Fachartikel (Fachzeitschriften, professionelle Artikel)
+   - Wissenschaftlich (Forschung, akademische Arbeiten, Studien)
+   - Tutorial (How-to Guides, Schritt-für-Schritt Anleitungen)
+   - Blog (persönliche Blogs, Erfahrungsberichte)
+   - Forum (Diskussionsforen, Q&A)
+   - Video (YouTube, Vimeo, Videoplattformen)
+   - Buch (Bücher, E-Books, Buchrezensionen)
+   - Sonstiges (alles andere)
+
+4. tags: Array of 10-20 highly specific German tags. Include BOTH:
+   - General tags (e.g., "Holzbildhauerei", "Schnitzen", "Handwerk")
+   - VERY SPECIFIC technical tags (e.g., "Wasserstein", "Körnung 1000", "Schnitzeisen #7", "Lindenholz", "Relieftechnik", "Hohlbeitel", "V-Tool")
+   Mix general and extremely specific terms. More tags are better for precise searching!
+
 5. language: Detect language (Deutsch, English, or Français)
+
 6. quality_score: Rate 0-10 based on:
    - 9-10: Expert knowledge, in-depth tutorials, professional techniques, academic articles
    - 7-8: Good blog posts, detailed guides, experienced craftspeople sharing knowledge

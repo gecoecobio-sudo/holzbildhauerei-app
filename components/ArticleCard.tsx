@@ -53,7 +53,10 @@ export function ArticleCard({ source, isAdmin = false, onUpdate, allSources = []
     }
   }
 
-  async function handleScoreChange(delta: number) {
+  async function handleScoreChange(delta: number, event?: React.MouseEvent) {
+    // Prevent event bubbling to avoid closing parent dropdowns
+    event?.stopPropagation()
+
     const newScore = Math.max(0, Math.min(10, displayScore + delta))
     setUpdating(true)
     try {
@@ -72,7 +75,10 @@ export function ArticleCard({ source, isAdmin = false, onUpdate, allSources = []
     }
   }
 
-  async function handleToggleStar() {
+  async function handleToggleStar(event?: React.MouseEvent) {
+    // Prevent event bubbling to avoid closing parent dropdowns
+    event?.stopPropagation()
+
     setUpdating(true)
     try {
       const res = await fetch(`/api/admin/sources/${source.id}`, {
@@ -246,7 +252,7 @@ export function ArticleCard({ source, isAdmin = false, onUpdate, allSources = []
 
           {/* Score Controls */}
           <button
-            onClick={() => handleScoreChange(-1)}
+            onClick={(e) => handleScoreChange(-1, e)}
             disabled={updating || displayScore <= 0}
             className="p-1 hover:bg-[rgb(var(--hover))] rounded disabled:opacity-50"
             title="Bewertung -1"
@@ -254,7 +260,7 @@ export function ArticleCard({ source, isAdmin = false, onUpdate, allSources = []
             <Minus className="w-4 h-4" />
           </button>
           <button
-            onClick={() => handleScoreChange(1)}
+            onClick={(e) => handleScoreChange(1, e)}
             disabled={updating || displayScore >= 10}
             className="p-1 hover:bg-[rgb(var(--hover))] rounded disabled:opacity-50"
             title="Bewertung +1"
@@ -264,7 +270,7 @@ export function ArticleCard({ source, isAdmin = false, onUpdate, allSources = []
 
           {/* Star Toggle */}
           <button
-            onClick={handleToggleStar}
+            onClick={(e) => handleToggleStar(e)}
             disabled={updating}
             className="p-1 hover:bg-[rgb(var(--hover))] rounded disabled:opacity-50"
             title={isStarred ? "Stern entfernen" : "Als Empfehlung markieren"}

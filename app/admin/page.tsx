@@ -157,35 +157,7 @@ export default function AdminPage() {
 
       {/* Main Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="notion-card">
-            <h3 className="text-sm font-semibold text-secondary mb-2">Gesamt Quellen</h3>
-            <div className="text-3xl font-bold text-[rgb(var(--accent-teal))]">0</div>
-          </div>
-          <div className="notion-card">
-            <h3 className="text-sm font-semibold text-secondary mb-2">Empfohlene</h3>
-            <div className="text-3xl font-bold text-[rgb(var(--accent-yellow))]">0</div>
-          </div>
-          <div className="notion-card">
-            <h3 className="text-sm font-semibold text-secondary mb-2">Ø Qualität</h3>
-            <div className="text-3xl font-bold text-[rgb(var(--accent-blue))]">-</div>
-          </div>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="notion-card">
-            <h2 className="text-lg font-semibold mb-4">Quellenmanagement</h2>
-            <p className="text-secondary text-sm mb-4">
-              Verwalte alle gespeicherten Quellen, passe Bewertungen an und markiere Empfehlungen.
-            </p>
-            <button
-              onClick={() => router.push('/admin/sources')}
-              className="notion-button-primary"
-            >
-              Quellen verwalten
-            </button>
-          </div>
-
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           <div className="notion-card">
             <h2 className="text-lg font-semibold mb-4">Query Management</h2>
             <p className="text-secondary text-sm mb-4">

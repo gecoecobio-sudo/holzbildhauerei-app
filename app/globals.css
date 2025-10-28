@@ -6,26 +6,26 @@
 
 @layer base {
   :root {
-    /* Notion-inspired Color Palette */
-    --background: 255 255 255;
-    --foreground: 26 26 26;
-    --text-secondary: 107 107 107;
-    --text-tertiary: 163 163 163;
+    /* Warm Wood-inspired Color Palette */
+    --background: 254 252 248;  /* Soft warm white */
+    --foreground: 45 35 30;      /* Deep brown-black */
+    --text-secondary: 100 82 70; /* Medium warm brown */
+    --text-tertiary: 150 132 118; /* Light warm brown */
 
-    /* Accent Colors */
-    --accent-teal: 14 165 233;
-    --accent-red: 239 68 68;
-    --accent-yellow: 245 158 11;
-    --accent-blue: 59 130 246;
+    /* Accent Colors - Wood Tones */
+    --accent-teal: 200 121 65;   /* Warm wood orange (main accent) */
+    --accent-red: 180 75 55;     /* Darker warm red-brown */
+    --accent-yellow: 218 165 90; /* Honey wood tone */
+    --accent-blue: 140 110 85;   /* Muted wood brown */
 
     /* UI Elements */
-    --border: 229 229 229;
-    --hover: 245 245 245;
-    --selected: 239 246 255;
+    --border: 230 220 210;       /* Warm beige border */
+    --hover: 248 244 238;        /* Soft cream hover */
+    --selected: 250 240 230;     /* Warm peach selection */
 
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1);
+    --shadow-sm: 0 1px 2px 0 rgb(100 82 70 / 0.08);
+    --shadow-md: 0 4px 6px -1px rgb(100 82 70 / 0.12);
   }
 }
 
