@@ -40,8 +40,8 @@ export async function POST(request: NextRequest) {
     })
 
     try {
-      // Search with Serper (reduced to 5 URLs for faster processing)
-      const urls = await searchWithSerper(query.query, 5)
+      // Search with Serper - Use 15 URLs for maximum quality coverage
+      const urls = await searchWithSerper(query.query, 15)
 
       let successCount = 0
       const errors = []
@@ -68,11 +68,11 @@ export async function POST(request: NextRequest) {
             continue
           }
 
-          // Fetch page content with timeout
+          // Fetch page content with longer timeout for quality
           let content = ''
           try {
             const controller = new AbortController()
-            const timeout = setTimeout(() => controller.abort(), 10000) // 10s timeout
+            const timeout = setTimeout(() => controller.abort(), 30000) // 30s timeout for quality
 
             const pageResponse = await fetch(url, {
               headers: {

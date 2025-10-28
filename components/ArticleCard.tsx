@@ -2,7 +2,7 @@
 
 import { Source } from "@/lib/types"
 import Link from "next/link"
-import { Star, ExternalLink, Trash2, Plus, Minus, ChevronDown, ChevronUp, Hash } from "lucide-react"
+import { Star, ExternalLink, Trash2, Plus, Minus, ChevronDown, ChevronUp, Hash, Edit2, Save, X } from "lucide-react"
 import { useState } from "react"
 
 interface ArticleCardProps {
@@ -19,6 +19,12 @@ export function ArticleCard({ source, isAdmin = false, onUpdate, allSources = []
   const [updating, setUpdating] = useState(false)
   const [showSimilar, setShowSimilar] = useState(false)
   const [showTags, setShowTags] = useState(false)
+  const [isEditing, setIsEditing] = useState(false)
+  const [editedTitle, setEditedTitle] = useState(source.title)
+  const [editedSummary, setEditedSummary] = useState(source.summary_de)
+  const [editedCategory, setEditedCategory] = useState(source.category)
+  const [editedLanguage, setEditedLanguage] = useState(source.language)
+  const [editedTags, setEditedTags] = useState(source.tags.join(', '))
 
   // Calculate similar articles based on tag overlap
   const similarArticles = allSources
@@ -96,39 +102,172 @@ export function ArticleCard({ source, isAdmin = false, onUpdate, allSources = []
     }
   }
 
+  async function handleSaveEdit() {
+    setUpdating(true)
+    try {
+      const tagsArray = editedTags.split(',').map(t => t.trim()).filter(t => t)
+
+      const res = await fetch(`/api/admin/sources/${source.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          title: editedTitle,
+          summary_de: editedSummary,
+          category: editedCategory,
+          language: editedLanguage,
+          tags: tagsArray  // Send as array, API will stringify it
+        })
+      })
+      if (res.ok) {
+        setIsEditing(false)
+        if (onUpdate) onUpdate()
+      } else {
+        alert('Fehler beim Speichern')
+      }
+    } catch (error) {
+      console.error('Update failed:', error)
+      alert('Fehler beim Speichern')
+    } finally {
+      setUpdating(false)
+    }
+  }
+
+  function handleCancelEdit() {
+    setEditedTitle(source.title)
+    setEditedSummary(source.summary_de)
+    setEditedCategory(source.category)
+    setEditedLanguage(source.language)
+    setEditedTags(source.tags.join(', '))
+    setIsEditing(false)
+  }
+
   return (
     <div className="notion-card group">
-      {/* Header mit Titel und Stern */}
-      <div className="flex items-start justify-between gap-2 mb-3">
-        <h3 className="text-[1rem] font-semibold leading-snug flex-1">
-          {source.title}
-        </h3>
-        {isStarred && (
-          <Star className="w-5 h-5 fill-[rgb(var(--accent-yellow))] text-[rgb(var(--accent-yellow))] flex-shrink-0" />
-        )}
-      </div>
+      {/* Edit Mode */}
+      {isEditing ? (
+        <div className="space-y-3">
+          {/* Title */}
+          <div>
+            <label className="block text-xs font-medium mb-1">Titel</label>
+            <input
+              type="text"
+              value={editedTitle}
+              onChange={(e) => setEditedTitle(e.target.value)}
+              className="notion-input w-full text-sm"
+            />
+          </div>
 
-      {/* Meta-Informationen */}
-      <div className="flex flex-wrap gap-2 mb-3 text-xs text-secondary">
-        <span className="px-2 py-1 bg-[rgb(var(--hover))] rounded">
-          {source.category}
-        </span>
-        <span className="px-2 py-1 bg-[rgb(var(--hover))] rounded">
-          {source.language}
-        </span>
-        <span className={`px-2 py-1 rounded font-medium ${
-          displayScore >= 9 ? 'bg-green-50 text-green-700' :
-          displayScore >= 7 ? 'bg-blue-50 text-blue-700' :
-          'bg-gray-50 text-gray-700'
-        }`}>
-          {displayScore}/10
-        </span>
-      </div>
+          {/* Summary */}
+          <div>
+            <label className="block text-xs font-medium mb-1">Zusammenfassung</label>
+            <textarea
+              value={editedSummary}
+              onChange={(e) => setEditedSummary(e.target.value)}
+              className="notion-input w-full text-sm"
+              rows={4}
+            />
+          </div>
 
-      {/* Zusammenfassung */}
-      <p className="text-[0.875rem] text-secondary mb-3">
-        {source.summary_de}
-      </p>
+          {/* Category & Language */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-medium mb-1">Kategorie</label>
+              <select
+                value={editedCategory}
+                onChange={(e) => setEditedCategory(e.target.value)}
+                className="notion-input w-full text-sm"
+              >
+                <option value="Shopping">Shopping</option>
+                <option value="Dokumentation">Dokumentation</option>
+                <option value="Fachartikel">Fachartikel</option>
+                <option value="Wissenschaftlich">Wissenschaftlich</option>
+                <option value="Tutorial">Tutorial</option>
+                <option value="Blog">Blog</option>
+                <option value="Forum">Forum</option>
+                <option value="Video">Video</option>
+                <option value="Buch">Buch</option>
+                <option value="Sonstiges">Sonstiges</option>
+              </select>
+            </div>
+            <div>
+              <label className="block text-xs font-medium mb-1">Sprache</label>
+              <select
+                value={editedLanguage}
+                onChange={(e) => setEditedLanguage(e.target.value)}
+                className="notion-input w-full text-sm"
+              >
+                <option value="Deutsch">Deutsch</option>
+                <option value="English">English</option>
+                <option value="Français">Français</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Tags */}
+          <div>
+            <label className="block text-xs font-medium mb-1">Tags (kommagetrennt)</label>
+            <input
+              type="text"
+              value={editedTags}
+              onChange={(e) => setEditedTags(e.target.value)}
+              className="notion-input w-full text-sm"
+              placeholder="Tag1, Tag2, Tag3"
+            />
+          </div>
+
+          {/* Save/Cancel */}
+          <div className="flex gap-2 pt-2">
+            <button
+              onClick={handleSaveEdit}
+              disabled={updating}
+              className="notion-button-primary flex items-center gap-2 flex-1"
+            >
+              <Save className="w-4 h-4" />
+              {updating ? 'Speichert...' : 'Speichern'}
+            </button>
+            <button
+              onClick={handleCancelEdit}
+              disabled={updating}
+              className="notion-button-secondary flex items-center gap-2"
+            >
+              <X className="w-4 h-4" />
+              Abbrechen
+            </button>
+          </div>
+        </div>
+      ) : (
+        <>
+          {/* Header mit Titel und Stern */}
+          <div className="flex items-start justify-between gap-2 mb-3">
+            <h3 className="text-[1rem] font-semibold leading-snug flex-1">
+              {source.title}
+            </h3>
+            {isStarred && (
+              <Star className="w-5 h-5 fill-[rgb(var(--accent-yellow))] text-[rgb(var(--accent-yellow))] flex-shrink-0" />
+            )}
+          </div>
+
+          {/* Meta-Informationen */}
+          <div className="flex flex-wrap gap-2 mb-3 text-xs text-secondary">
+            <span className="px-2 py-1 bg-[rgb(var(--hover))] rounded">
+              {source.category}
+            </span>
+            <span className="px-2 py-1 bg-[rgb(var(--hover))] rounded">
+              {source.language}
+            </span>
+            <span className={`px-2 py-1 rounded font-medium ${
+              displayScore >= 9 ? 'bg-green-50 text-green-700' :
+              displayScore >= 7 ? 'bg-blue-50 text-blue-700' :
+              'bg-gray-50 text-gray-700'
+            }`}>
+              {displayScore}/10
+            </span>
+          </div>
+
+          {/* Zusammenfassung */}
+          <p className="text-[0.875rem] text-secondary mb-3">
+            {source.summary_de}
+          </p>
 
       {/* Tags - Collapsible */}
       {source.tags.length > 0 && (
@@ -278,6 +417,16 @@ export function ArticleCard({ source, isAdmin = false, onUpdate, allSources = []
             <Star className={`w-4 h-4 ${isStarred ? 'fill-yellow-400 text-yellow-400' : ''}`} />
           </button>
 
+          {/* Edit */}
+          <button
+            onClick={() => setIsEditing(true)}
+            disabled={updating}
+            className="p-1 hover:bg-blue-50 text-blue-600 rounded disabled:opacity-50"
+            title="Artikel bearbeiten"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+
           {/* Delete */}
           <button
             onClick={handleDelete}
@@ -288,6 +437,8 @@ export function ArticleCard({ source, isAdmin = false, onUpdate, allSources = []
             <Trash2 className="w-4 h-4" />
           </button>
         </div>
+      )}
+        </>
       )}
     </div>
   )

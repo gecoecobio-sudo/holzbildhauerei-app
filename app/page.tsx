@@ -55,8 +55,15 @@ export default function HomePage() {
         last_updated: new Date(s.last_updated)
       }))
 
-      setSources(parsedSources)
-      setFilteredSources(parsedSources)
+      // Sort by rating (corrected_score or relevance_score) descending
+      const sortedSources = parsedSources.sort((a: Source, b: Source) => {
+        const scoreA = a.corrected_score || a.relevance_score
+        const scoreB = b.corrected_score || b.relevance_score
+        return scoreB - scoreA
+      })
+
+      setSources(sortedSources)
+      setFilteredSources(sortedSources)
       setStats(statsData)
       setIsAdmin(authData.authenticated || false)
     } catch (error) {
@@ -111,6 +118,13 @@ export default function HomePage() {
     if (filters.starredOnly) {
       filtered = filtered.filter(s => s.star_rating)
     }
+
+    // Sort by rating (corrected_score or relevance_score) descending
+    filtered.sort((a, b) => {
+      const scoreA = a.corrected_score || a.relevance_score
+      const scoreB = b.corrected_score || b.relevance_score
+      return scoreB - scoreA
+    })
 
     setFilteredSources(filtered)
     resetPagination()

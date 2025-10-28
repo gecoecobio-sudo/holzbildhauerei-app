@@ -768,29 +768,37 @@ export default function QueriesManagementPage() {
                     </div>
 
                     {/* Show sources for processed queries */}
-                    {query.status === 'processed' && query.results_count > 0 && (
+                    {query.status === 'processed' && (
                       <div className="mt-4 pt-4 border-t border-[rgb(var(--border))]">
-                        <button
-                          onClick={() => loadQuerySources(query.id, query.query)}
-                          disabled={loadingSources.has(query.id)}
-                          className="flex items-center gap-2 text-sm text-[rgb(var(--accent-teal))] hover:underline mb-3"
-                        >
-                          {expandedQueryId === query.id ? (
-                            <ChevronUp className="w-4 h-4" />
-                          ) : (
-                            <ChevronDown className="w-4 h-4" />
-                          )}
-                          {loadingSources.has(query.id) ? (
-                            <>
-                              <Loader className="w-4 h-4 animate-spin" />
-                              Lädt Artikel...
-                            </>
-                          ) : (
-                            <>
-                              {expandedQueryId === query.id ? 'Artikel ausblenden' : `${query.results_count} Artikel anzeigen`}
-                            </>
-                          )}
-                        </button>
+                        {query.results_count > 0 ? (
+                          <>
+                            <button
+                              onClick={() => loadQuerySources(query.id, query.query)}
+                              disabled={loadingSources.has(query.id)}
+                              className="flex items-center gap-2 text-sm text-[rgb(var(--accent-teal))] hover:underline mb-3"
+                            >
+                              {expandedQueryId === query.id ? (
+                                <ChevronUp className="w-4 h-4" />
+                              ) : (
+                                <ChevronDown className="w-4 h-4" />
+                              )}
+                              {loadingSources.has(query.id) ? (
+                                <>
+                                  <Loader className="w-4 h-4 animate-spin" />
+                                  Lädt Artikel...
+                                </>
+                              ) : (
+                                <>
+                                  {expandedQueryId === query.id ? 'Artikel ausblenden' : `${query.results_count} Artikel anzeigen`}
+                                </>
+                              )}
+                            </button>
+                          </>
+                        ) : (
+                          <div className="text-sm text-secondary">
+                            Keine neuen Artikel gefunden (alle URLs existieren bereits oder erfüllen nicht die Qualitätskriterien)
+                          </div>
+                        )}
 
                         {expandedQueryId === query.id && querySources[query.id] && (
                           <div className="space-y-4">

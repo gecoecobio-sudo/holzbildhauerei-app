@@ -4,14 +4,14 @@ const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY || '')
 
 export async function generateSourceMetadata(url: string, content?: string) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' })
 
-    const prompt = `Analyze this URL and generate metadata for a woodcarving knowledge base article.
+    const prompt = `Analyze this URL and generate metadata for a woodworking and traditional crafts knowledge base article.
 
 URL: ${url}
-${content && typeof content === 'string' && content.length > 0 ? `Content preview: ${content.substring(0, 1500)}` : ''}
+${content && typeof content === 'string' && content.length > 0 ? `Content preview: ${content.substring(0, 3000)}` : ''}
 
-IMPORTANT: This is a knowledge base for woodcarving professionals and enthusiasts. Evaluate the quality critically.
+IMPORTANT: This knowledge base covers traditional woodworking, wood carving, and wood sculpting. Be objective and accurate in your analysis - do NOT force woodcarving framing if the content is primarily about general woodworking or other wood crafts. Evaluate the quality critically.
 
 Generate a JSON response with:
 1. title: Concise German title
@@ -32,10 +32,10 @@ Generate a JSON response with:
    - Buch (Bücher, E-Books, Buchrezensionen)
    - Sonstiges (alles andere)
 
-4. tags: Array of 10-20 highly specific German tags. Include BOTH:
-   - General tags (e.g., "Holzbildhauerei", "Schnitzen", "Handwerk")
-   - VERY SPECIFIC technical tags (e.g., "Wasserstein", "Körnung 1000", "Schnitzeisen #7", "Lindenholz", "Relieftechnik", "Hohlbeitel", "V-Tool")
-   Mix general and extremely specific terms. More tags are better for precise searching!
+4. tags: Array of 10-20 highly specific German tags that ACCURATELY describe the content. Include BOTH:
+   - General tags matching the actual content (e.g., "Holzbearbeitung", "Tischlerei", "Schnitzen", "Handwerk")
+   - VERY SPECIFIC technical tags based on what's actually discussed (e.g., "Wasserstein", "Körnung 1000", "Hobel", "Sägetechnik", "Schnitzeisen", "Lindenholz", "Verbindungen")
+   DO NOT add woodcarving-specific tags if the content is about general woodworking. Be accurate and objective!
 
 5. language: Detect language (Deutsch, English, or Français)
 
@@ -79,25 +79,26 @@ Return ONLY valid JSON, no markdown formatting.`
 
 export async function generateSearchQueries(topic: string, count: number = 5) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-thinking-exp-01-21' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' })
 
-    const prompt = `Generate ${count} specific search queries for finding high-quality woodcarving EDUCATIONAL resources about: "${topic}"
+    const prompt = `Generate ${count} specific search queries for finding high-quality woodworking and traditional crafts EDUCATIONAL resources about: "${topic}"
 
-IMPORTANT: Focus on finding expert knowledge, tutorials, and educational content. AVOID shopping/e-commerce sites.
+IMPORTANT: Focus on finding expert knowledge, tutorials, and educational content. Be broad and inclusive of all woodworking topics. AVOID shopping/e-commerce sites.
 
 Requirements:
 - Queries should target educational content: tutorials, guides, techniques, how-to articles
 - Use keywords like: "tutorial", "anleitung", "technik", "guide", "how to", "lernen"
 - Queries should be in German, English, or French
-- Focus on woodcarving, wood sculpting, traditional craftsmanship
+- Focus on all aspects of woodworking: carving, sculpting, joinery, furniture making, tool techniques, traditional craftsmanship
 - Mix of beginner and advanced topics
 - Include specific techniques, tools, or materials when relevant
 - AVOID commercial keywords like: "kaufen", "buy", "shop", "preis", "price", "bestellen"
 
 Examples of GOOD queries:
-- "Holzschnitzen Tutorial für Anfänger Schnitztechniken"
+- "Holzbearbeitung Tutorial traditionelle Techniken"
 - "wood carving relief technique step by step guide"
-- "sculpture sur bois outils traditionnels technique"
+- "Holzverbindungen Anleitung Tischlerei"
+- "Werkzeug schleifen schärfen Anleitung"
 
 Return as JSON array of strings: ["query1", "query2", ...]
 Return ONLY valid JSON, no markdown formatting.`
@@ -118,7 +119,7 @@ Return ONLY valid JSON, no markdown formatting.`
 
 export async function correctTitle(originalTitle: string, url: string, summary?: string) {
   try {
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-thinking-exp-01-21' })
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-pro' })
 
     const prompt = `Analyze and correct/improve this article title:
 
