@@ -33,27 +33,18 @@ export default function TagsPage() {
       if (res.ok) {
         const data = await res.json()
 
-        // Calculate tag statistics
-        const tagCounts = new Map<string, number>()
-        let total = 0
+        // API returns already counted tags with {tag, count, sources}
+        const totalSourcesWithTags = data.tags.reduce((sum: number, t: any) => sum + t.count, 0)
 
-        // Count all tags
-        data.tags.forEach((tag: string) => {
-          tagCounts.set(tag, (tagCounts.get(tag) || 0) + 1)
-          total++
-        })
-
-        // Convert to array and calculate percentages
-        const tagStats: TagStat[] = Array.from(tagCounts.entries())
-          .map(([tag, count]) => ({
-            tag,
-            count,
-            percentage: (count / total) * 100
-          }))
-          .sort((a, b) => b.count - a.count)
+        // Convert to TagStat format with percentages
+        const tagStats: TagStat[] = data.tags.map((tagData: any) => ({
+          tag: tagData.tag,
+          count: tagData.count,
+          percentage: (tagData.count / totalSourcesWithTags) * 100
+        }))
 
         setTags(tagStats)
-        setTotalTags(total)
+        setTotalTags(totalSourcesWithTags)
 
         // Load co-occurrences
         const coRes = await fetch('/api/admin/tags')

@@ -6,26 +6,26 @@
 
 @layer base {
   :root {
-    /* Warm Wood-inspired Color Palette */
-    --background: 254 252 248;  /* Soft warm white */
-    --foreground: 45 35 30;      /* Deep brown-black */
-    --text-secondary: 100 82 70; /* Medium warm brown */
-    --text-tertiary: 150 132 118; /* Light warm brown */
+    /* Clean Neutral Background with Warm Accents */
+    --background: 255 255 255;   /* Pure white background */
+    --foreground: 30 30 30;      /* Neutral dark gray text */
+    --text-secondary: 100 100 100; /* Neutral medium gray */
+    --text-tertiary: 150 150 150; /* Neutral light gray */
 
-    /* Accent Colors - Wood Tones */
+    /* Accent Colors - Warm Wood Tones (only for buttons/highlights) */
     --accent-teal: 200 121 65;   /* Warm wood orange (main accent) */
     --accent-red: 180 75 55;     /* Darker warm red-brown */
     --accent-yellow: 218 165 90; /* Honey wood tone */
     --accent-blue: 140 110 85;   /* Muted wood brown */
 
-    /* UI Elements */
-    --border: 230 220 210;       /* Warm beige border */
-    --hover: 248 244 238;        /* Soft cream hover */
-    --selected: 250 240 230;     /* Warm peach selection */
+    /* UI Elements - Neutral */
+    --border: 230 230 230;       /* Neutral light gray border */
+    --hover: 250 250 250;        /* Neutral very light gray */
+    --selected: 245 245 245;     /* Neutral light gray selection */
 
     /* Shadows */
-    --shadow-sm: 0 1px 2px 0 rgb(100 82 70 / 0.08);
-    --shadow-md: 0 4px 6px -1px rgb(100 82 70 / 0.12);
+    --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.08);
+    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.12);
   }
 }
 
