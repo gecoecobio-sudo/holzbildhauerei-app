@@ -40,15 +40,23 @@ export async function POST(request: NextRequest) {
     })
 
     try {
+      console.log(`[Query ${queryId}] Starting processing for: "${query.query}"`)
+      const startTime = Date.now()
+
       // Search with Serper - Use 8 URLs (balanced quality/speed)
-      // 15 URLs with Gemini 2.5 Pro exceeds Vercel's 60s serverless timeout
+      console.log(`[Query ${queryId}] Searching with Serper...`)
       const urls = await searchWithSerper(query.query, 8)
+      console.log(`[Query ${queryId}] Found ${urls.length} URLs:`, urls)
 
       let successCount = 0
       const errors = []
 
       // Process each URL
-      for (const url of urls) {
+      for (let i = 0; i < urls.length; i++) {
+        const url = urls[i]
+        const urlStartTime = Date.now()
+        console.log(`[Query ${queryId}] Processing URL ${i + 1}/${urls.length}: ${url}`)
+
         try {
           // Check if query was cancelled
           const currentQuery = await prisma.searchQueue.findUnique({
@@ -56,7 +64,7 @@ export async function POST(request: NextRequest) {
           })
 
           if (currentQuery?.status === 'failed') {
-            console.log('Query processing cancelled by user')
+            console.log(`[Query ${queryId}] Cancelled by user`)
             break
           }
 
@@ -66,11 +74,14 @@ export async function POST(request: NextRequest) {
           })
 
           if (existing) {
+            console.log(`[Query ${queryId}] URL ${i + 1}/${urls.length} already exists, skipping`)
             continue
           }
 
           // Fetch page content with timeout
+          console.log(`[Query ${queryId}] Fetching content for URL ${i + 1}/${urls.length}...`)
           let content = ''
+          const fetchStartTime = Date.now()
           try {
             const controller = new AbortController()
             const timeout = setTimeout(() => controller.abort(), 15000) // 15s timeout (balanced)
@@ -86,21 +97,26 @@ export async function POST(request: NextRequest) {
 
             if (pageResponse.ok) {
               content = await pageResponse.text()
+              console.log(`[Query ${queryId}] Fetched ${content.length} chars in ${Date.now() - fetchStartTime}ms`)
             }
           } catch (error) {
-            console.log('Could not fetch page content for', url, error instanceof Error ? error.message : '')
+            console.log(`[Query ${queryId}] Failed to fetch URL ${i + 1}/${urls.length}:`, error instanceof Error ? error.message : 'Unknown error')
           }
 
           // Generate metadata
+          console.log(`[Query ${queryId}] Generating metadata for URL ${i + 1}/${urls.length}...`)
+          const metadataStartTime = Date.now()
           const metadata = await generateSourceMetadata(url, content)
+          console.log(`[Query ${queryId}] Generated metadata in ${Date.now() - metadataStartTime}ms, score: ${metadata.quality_score}/10`)
 
           // Skip low-quality sources (score < 4)
           if (metadata.quality_score < 4) {
-            console.log(`Skipping low-quality source (score ${metadata.quality_score}):`, url)
+            console.log(`[Query ${queryId}] URL ${i + 1}/${urls.length} skipped (low quality: ${metadata.quality_score}/10)`)
             continue
           }
 
           // Create source
+          console.log(`[Query ${queryId}] Saving URL ${i + 1}/${urls.length} to database...`)
           await prisma.source.create({
             data: {
               url,
@@ -121,11 +137,16 @@ export async function POST(request: NextRequest) {
           }
 
           successCount++
+          const urlTotalTime = Date.now() - urlStartTime
+          console.log(`[Query ${queryId}] URL ${i + 1}/${urls.length} completed in ${urlTotalTime}ms (Success #${successCount})`)
         } catch (error) {
-          console.error('Failed to process URL:', url, error)
+          console.error(`[Query ${queryId}] Failed to process URL ${i + 1}/${urls.length}:`, error)
           errors.push({ url, error: error instanceof Error ? error.message : 'Unknown error' })
         }
       }
+
+      const totalTime = Date.now() - startTime
+      console.log(`[Query ${queryId}] Processing complete! ${successCount} sources added in ${totalTime}ms (${(totalTime/1000).toFixed(1)}s)`)
 
       // Update query status
       await prisma.searchQueue.update({
