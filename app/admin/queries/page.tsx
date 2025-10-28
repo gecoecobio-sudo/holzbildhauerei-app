@@ -113,18 +113,53 @@ export default function QueriesManagementPage() {
     setProcessingIds(prev => new Set(prev).add(id))
 
     try {
+      // Start processing
       const res = await fetch('/api/admin/queries/process', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ queryId: id })
       })
 
-      if (res.ok) {
-        loadQueries()
+      if (!res.ok) {
+        throw new Error('Failed to start processing')
       }
+
+      // Poll for status updates every 2 seconds
+      const pollInterval = setInterval(async () => {
+        try {
+          const statusRes = await fetch(`/api/admin/queries?search=&status=`)
+          if (statusRes.ok) {
+            const data = await statusRes.json()
+            const query = data.queries.find((q: any) => q.id === id)
+
+            if (query && query.status !== 'processing') {
+              // Processing complete or failed
+              clearInterval(pollInterval)
+              setProcessingIds(prev => {
+                const next = new Set(prev)
+                next.delete(id)
+                return next
+              })
+              loadQueries()
+            }
+          }
+        } catch (error) {
+          console.error('Failed to poll status:', error)
+        }
+      }, 2000)
+
+      // Timeout after 5 minutes
+      setTimeout(() => {
+        clearInterval(pollInterval)
+        setProcessingIds(prev => {
+          const next = new Set(prev)
+          next.delete(id)
+          return next
+        })
+        loadQueries()
+      }, 300000)
     } catch (error) {
       console.error('Failed to process query:', error)
-    } finally {
       setProcessingIds(prev => {
         const next = new Set(prev)
         next.delete(id)
@@ -150,8 +185,8 @@ export default function QueriesManagementPage() {
     }
   }
 
-  async function loadQuerySources(queryId: number, queryText: string) {
-    if (querySources[queryId]) {
+  async function loadQuerySources(queryId: number, queryText: string, forceReload: boolean = false) {
+    if (querySources[queryId] && !forceReload) {
       // Sources already loaded, just toggle
       setExpandedQueryId(expandedQueryId === queryId ? null : queryId)
       return
@@ -682,6 +717,16 @@ export default function QueriesManagementPage() {
                           </button>
                         )}
 
+                        {/* Processing Status */}
+                        {query.status === 'processing' && (
+                          <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 rounded-lg border border-blue-200">
+                            <Loader className="w-4 h-4 animate-spin text-blue-600" />
+                            <span className="text-sm text-blue-700 font-medium">
+                              Verarbeitung läuft...
+                            </span>
+                          </div>
+                        )}
+
                         {/* Delete */}
                         <button
                           onClick={() => deleteQuery(query.id)}
@@ -726,7 +771,7 @@ export default function QueriesManagementPage() {
                                   key={source.id}
                                   source={source}
                                   isAdmin={true}
-                                  onUpdate={() => loadQuerySources(query.id, query.query)}
+                                  onUpdate={() => loadQuerySources(query.id, query.query, true)}
                                   allSources={querySources[query.id]}
                                 />
                               ))

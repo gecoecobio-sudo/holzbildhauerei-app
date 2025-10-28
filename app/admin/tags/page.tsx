@@ -22,6 +22,7 @@ export default function TagsPage() {
   const [tags, setTags] = useState<TagStat[]>([])
   const [cooccurrences, setCooccurrences] = useState<CooccurrenceData[]>([])
   const [totalTags, setTotalTags] = useState(0)
+  const [totalCooccurrences, setTotalCooccurrences] = useState(0)
 
   useEffect(() => {
     loadTags()
@@ -50,7 +51,12 @@ export default function TagsPage() {
         const coRes = await fetch('/api/admin/tags')
         if (coRes.ok) {
           const coData = await coRes.json()
-          setCooccurrences(coData.cooccurrences || [])
+          const cooccurrencesData = coData.cooccurrences || []
+          setCooccurrences(cooccurrencesData)
+
+          // Calculate total co-occurrences (sum of all counts)
+          const total = cooccurrencesData.reduce((sum: number, co: CooccurrenceData) => sum + co.count, 0)
+          setTotalCooccurrences(total)
         }
       }
     } catch (error) {
@@ -110,7 +116,8 @@ export default function TagsPage() {
                   <TrendingUp className="w-5 h-5 text-[rgb(var(--accent-yellow))]" />
                   <h3 className="text-sm font-semibold text-secondary">Co-Occurrences</h3>
                 </div>
-                <div className="text-3xl font-bold">{cooccurrences.length}</div>
+                <div className="text-3xl font-bold">{totalCooccurrences}</div>
+                <div className="text-xs text-secondary mt-1">{cooccurrences.length} einzigartige Paare</div>
               </div>
             </div>
 
